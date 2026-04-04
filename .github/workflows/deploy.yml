@@ -13,15 +13,37 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          node-version: 20
+          # 깃 충돌 방지를 위해 이력을 깨끗하게 가져옵니다.
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          # 경고를 없애기 위해 Node 버전을 22로 올립니다.
+          node-version: 22
           cache: 'npm'
-      - run: npm install
-      - run: npm run build
-      - uses: actions/configure-pages@v4
-      - uses: actions/upload-pages-artifact@v3
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
+          # 빌드 결과물인 dist 폴더를 정확히 지정합니다.
           path: './dist'
-      - uses: actions/deploy-pages@v4
+
+  deploy:
+    # 빌드가 성공해야만 배포를 시작하도록 단계를 나눕니다.
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
